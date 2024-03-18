@@ -112,39 +112,169 @@ namespace ProjetoDesenvolvimentoSoftware
             }
             return obj;
         }
-    }
 
-    internal class Program
+        /// <summary>
+        /// Adiciona uma nova sobremesa à base de dados.
+        /// </summary>
+        /// <param name="nome">Nome da sobremesa.</param>
+        /// <param name="descricao">Descrição da sobremesa.</param>
+        /// <param name="tipo">Tipo da sobremesa (true para dieta, false para normal).</param>
+        /// <returns>True se a sobremesa foi adicionada com sucesso, false caso contrário.</returns>
+public static bool NovaSobremesa(string nome, string descricao, bool tipo)
+{
+    try
     {
-        static void Main(string[] args)
+        string sql = "INSERT INTO Sobremesas (Nome, Descricao, Tipo) VALUES (@Nome, @Descricao, @Tipo);";
+
+        using (SqlCommand comando = new SqlCommand(sql, conexao))
         {
-            string connectionString = "Data Source=GONCALO;Initial Catalog=PDS;User ID=GONCALO\\gonca;Integrated Security=True;";
+            comando.Parameters.AddWithValue("@Nome", nome);
+            comando.Parameters.AddWithValue("@Descricao", descricao);
+            comando.Parameters.AddWithValue("@Tipo", tipo);
 
-            if (Sobremesa.Conectar())
+            conexao.Open();
+            comando.ExecuteNonQuery();
+            return true;
+        }
+    }
+    catch (SqlException ex)
+    {
+        Console.WriteLine("Erro SQL ao adicionar nova sobremesa: " + ex.Message);
+        return false;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Erro ao adicionar nova sobremesa: " + ex.Message);
+        return false;
+    }
+    finally
+    {
+        if (conexao.State != System.Data.ConnectionState.Closed)
+        {
+            conexao.Close();
+        }
+    }
+}
+
+
+
+   /// <summary>
+        /// Remove uma sobremesa da base de dados com base no ID.
+        /// </summary>
+        /// <param name="id">ID da sobremesa a ser removida.</param>
+        /// <returns>True se a sobremesa foi removida com sucesso, false caso contrário.</returns>
+        public static bool RemoverSobremesa(int id)
+        {
+            try
             {
-                Console.WriteLine("Conexão bem-sucedida à base de dados.");
+                string sql = "DELETE FROM Sobremesas WHERE Id = @Id;";
 
-                Sobremesa obj = Sobremesa.ObterSobremesaId(connectionString, 1);
-
-                if (obj != null)
+                using (SqlCommand comando = new SqlCommand(sql, conexao))
                 {
-                    if (obj.Tipo)
-                        Console.WriteLine($"Sobremesa ID: {obj.Id}, Nome: {obj.Nome}, Descrição: {obj.Descricao}, Tipo: Dieta");
+                    comando.Parameters.AddWithValue("@Id", id);
+
+                    conexao.Open();
+                    int linhasAfetadas = comando.ExecuteNonQuery();
+
+                    if (linhasAfetadas > 0)
+                    {
+                        Console.WriteLine("Sobremesa removida com sucesso!");
+                        return true;
+                    }
                     else
-                        Console.WriteLine($"Sobremesa ID: {obj.Id}, Nome: {obj.Nome}, Descrição: {obj.Descricao}, Tipo: Normal");
+                    {
+                        Console.WriteLine("Nenhuma sobremesa encontrada com o ID especificado.");
+                        return false;
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine("Erro SQL ao remover sobremesa: " + ex.Message);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Erro ao remover sobremesa: " + ex.Message);
+                return false;
+            }
+            finally
+            {
+                if (conexao.State != System.Data.ConnectionState.Closed)
+                {
+                    conexao.Close();
+                }
+            }
+        }
+
+
+internal class Program
+        {
+            static void Main(string[] args)
+            {
+                string connectionString = "Data Source=GONCALO;Initial Catalog=PDS;User ID=GONCALO\\gonca;Integrated Security=True;";
+
+                if (Sobremesa.Conectar())
+                {
+                    Console.WriteLine("Conexão bem-sucedida à base de dados.");
+
+                    // Adicionando uma nova sobremesa
+                    bool sobremesaAdicionada = Sobremesa.NovaSobremesa("Pudim", "Delicioso pudim de leite", true);
+
+                    if (sobremesaAdicionada)
+                    {
+                        Console.WriteLine("Nova sobremesa adicionada com sucesso!");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Falha ao adicionar nova sobremesa.");
+                    }
+
+                    // Obtendo e exibindo a primeira sobremesa
+                    Sobremesa obj1 = Sobremesa.ObterSobremesaId(connectionString, 1);
+                    if (obj1 != null)
+                    {
+                        Console.WriteLine($"Sobremesa ID: {obj1.Id}, Nome: {obj1.Nome}, Descrição: {obj1.Descricao}, Tipo: {(obj1.Tipo ? "Dieta" : "Normal")}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Nenhuma sobremesa encontrada com o ID 1.");
+                    }
+
+                    // Obtendo e exibindo a segunda sobremesa
+                    Sobremesa obj2 = Sobremesa.ObterSobremesaId(connectionString, 2);
+                    if (obj2 != null)
+                    {
+                        Console.WriteLine($"Sobremesa ID: {obj2.Id}, Nome: {obj2.Nome}, Descrição: {obj2.Descricao}, Tipo: {(obj2.Tipo ? "Dieta" : "Normal")}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Nenhuma sobremesa encontrada com o ID 2.");
+                    }
+
+                    // Obtendo e exibindo a terceira sobremesa
+                    Sobremesa obj3 = Sobremesa.ObterSobremesaId(connectionString, 3);
+                    if (obj3 != null)
+                    {
+                        Console.WriteLine($"Sobremesa ID: {obj3.Id}, Nome: {obj3.Nome}, Descrição: {obj3.Descricao}, Tipo: {(obj3.Tipo ? "Dieta" : "Normal")}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Nenhuma sobremesa encontrada com o ID 3.");
+                    }
+
+                    Sobremesa.Desconectar();
                 }
                 else
                 {
-                    Console.WriteLine("Nenhuma sobremesa encontrada com o ID especificado.");
+                    Console.WriteLine("Falha ao conectar à base de dados.");
                 }
 
-                Sobremesa.Desconectar();
-            }
-            else
-            {
-                Console.WriteLine("Falha ao conectar à base de dados.");
+
+                  Sobremesa.RemoverSobremesa(1);
+
+                    Sobremesa.Desconectar();
             }
         }
     }
-
 }
