@@ -207,8 +207,62 @@ public static bool NovaSobremesa(string nome, string descricao, bool tipo)
             }
         }
 
+        /// <summary>
+        /// Altera os dados de uma sobremesa na de dados com base no ID.
+        /// </summary>
+        /// <param name="id">ID da sobremesa a ser alterada.</param>
+        /// <param name="nome">Novo nome da sobremesa.</param>
+        /// <param name="descricao">Nova descrição da sobremesa.</param>
+        /// <param name="tipo">Novo tipo da sobremesa (true para dieta, false para normal).</param>
+        /// <returns>True se os dados da sobremesa foram alterados com sucesso, false caso contrário.</returns>
+        public static bool AlterarSobremesa(int id, string nome, string descricao, bool tipo)
+        {
+            try
+            {
+                string sql = "UPDATE Sobremesas SET Nome = @Nome, Descricao = @Descricao, Tipo = @Tipo WHERE Id = @Id;";
 
-internal class Program
+                using (SqlCommand comando = new SqlCommand(sql, conexao))
+                {
+                    comando.Parameters.AddWithValue("@Nome", nome);
+                    comando.Parameters.AddWithValue("@Descricao", descricao);
+                    comando.Parameters.AddWithValue("@Tipo", tipo);
+                    comando.Parameters.AddWithValue("@Id", id);
+
+                    conexao.Open();
+                    int linhasAfetadas = comando.ExecuteNonQuery();
+
+                    if (linhasAfetadas > 0)
+                    {
+                        Console.WriteLine("Dados da sobremesa alterados com sucesso!");
+                        return true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Nenhuma sobremesa encontrada com o ID especificado.");
+                        return false;
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine("Erro SQL ao alterar dados da sobremesa: " + ex.Message);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Erro ao alterar dados da sobremesa: " + ex.Message);
+                return false;
+            }
+            finally
+            {
+                if (conexao.State != System.Data.ConnectionState.Closed)
+                {
+                    conexao.Close();
+                }
+            }
+        }
+
+        internal class Program
         {
             static void Main(string[] args)
             {
@@ -263,17 +317,15 @@ internal class Program
                         Console.WriteLine("Nenhuma sobremesa encontrada com o ID 3.");
                     }
 
+                    // Alterando os dados da terceira sobremesa
+                    Sobremesa.AlterarSobremesa(2, "Bolo de Chocolate", "Bolo de chocolate com cobertura cremosa", false);
+
                     Sobremesa.Desconectar();
                 }
                 else
                 {
                     Console.WriteLine("Falha ao conectar à base de dados.");
                 }
-
-
-                  Sobremesa.RemoverSobremesa(1);
-
-                    Sobremesa.Desconectar();
             }
         }
     }
